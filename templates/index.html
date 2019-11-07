@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Todo</title>
+  </head>
+  <body>
+    <form action="/todos/create" method="POST">
+      <div>
+        <label for="todo">Title</label>
+        <input
+          type="text"
+          id="todo"
+          name="todo"
+          placeholder="Enter todo"
+          required
+        />
+      </div>
+      <div>
+        <label for="description">Description</label>
+        <input
+          type="text"
+          id="description"
+          name="description"
+          placeholder="Enter description"
+          required
+        />
+      </div>
+      <button>Add Todo</button>
+    </form>
+    <ul>
+      {% for todo in data %}
+      <li>
+        <p>{{ todo.title }}</p>
+        <p>{{ todo.description }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+
+    <script>
+      document.querySelector('form').addEventListener('submit', e => {
+        e.preventDefault();
+
+        fetch('/todos/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            todo: document.querySelector('#todo').value,
+            description: document.querySelector('#description').value
+          })
+        })
+          .then(res => res.json())
+          .then(response => {
+            const li = document.createElement('li');
+            const p1 = document.createElement('p');
+            const p2 = document.createElement('p');
+            p1.innerText = response.todo;
+            p2.innerText = response.description;
+            li.appendChild(p1);
+            li.appendChild(p2);
+            document.querySelectorAll('input').forEach(input => {
+              input.value = '';
+            });
+
+            document.querySelector('ul').appendChild(li);
+          })
+          .catch(err => {
+            console.log(err);
+          });
+      });
+    </script>
+  </body>
+</html>
