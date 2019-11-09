@@ -5,41 +5,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Todo</title>
+
+    <!-- Styles -->
+    <style>
+      .invisible {
+        position: absolute;
+        left: -1000px;
+        top: auto;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+        width: 360px;
+      }
+
+      .todo-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 5px 0;
+        font-size: 1.2em;
+      }
+
+      .delete {
+        color: red;
+        cursor: pointer;
+      }
+
+    </style>
   </head>
+
+  <!-- body -->
   <body>
     <form action="/todos/create" method="POST">
-      <div>
-        <label for="todo">Title</label>
-        <input
-          type="text"
-          id="todo"
-          name="todo"
-          placeholder="Enter todo"
-          required
-        />
-      </div>
-      <div>
-        <label for="description">Description</label>
-        <input
-          type="text"
-          id="description"
-          name="description"
-          placeholder="Enter description"
-          required
-        />
-      </div>
+      <label class="invisible" for="description">Description</label>
+      <input
+        type="text"
+        id="description"
+        name="description"
+        placeholder="Enter description"
+        required
+      />
       <button>Add Todo</button>
     </form>
     <ul>
       {% for todo in data %}
-      <li>
-        <p>{{ todo.title }}</p>
-        <p>{{ todo.description }}</p>
+      <li class="todo-item">
+        <div>
+          <input
+            type="checkbox"
+            class="todo-checkbox"
+            name="check"
+            id="check"
+            data-id="{{ todo.id }}"
+            {%
+            if
+            todo.completed
+            %}
+            checked
+            {%
+            endif
+            %}
+          />
+          <label for="check">{{ todo.description }}</label>
+        </div>
+        <span class="delete" data-id="{{ todo.id }}">&cross;</span>
       </li>
       {% endfor %}
     </ul>
 
+    <!-- scripts -->
     <script>
+      const request = (url, method="GET", body) =>
+        fetch(url, {
+          method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: body ? JSON.stringify(body) : undefined
+        });
+
+      // Create Todo
       document.querySelector('form').addEventListener('submit', e => {
         e.preventDefault();
 
@@ -49,29 +99,50 @@
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            todo: document.querySelector('#todo').value,
             description: document.querySelector('#description').value
           })
         })
           .then(res => res.json())
           .then(response => {
-            const li = document.createElement('li');
-            const p1 = document.createElement('p');
-            const p2 = document.createElement('p');
-            p1.innerText = response.todo;
-            p2.innerText = response.description;
-            li.appendChild(p1);
-            li.appendChild(p2);
-            document.querySelectorAll('input').forEach(input => {
-              input.value = '';
-            });
-
-            document.querySelector('ul').appendChild(li);
+            console.log(response);
+            location.reload();
           })
           .catch(err => {
             console.log(err);
           });
       });
+
+      // Update(check/uncheck)
+      document.querySelectorAll('.todo-checkbox').forEach(todo => {
+        todo.addEventListener('change', e => {
+          const { checked, dataset } = e.target;
+          const body = {
+            completed: checked
+          };
+          console.log(dataset.id, body);
+
+          request(`/todos/${dataset.id}/update`, 'POST', body)
+            .then(res => res.json)
+            .then(() => {})
+            .catch(err => {
+              console.log(err);
+            });
+        });
+      });
+
+     // Delete todo
+     document.querySelectorAll('.delete').forEach(item => {
+       item.addEventListener('click', e => {
+         console.log(e.target)
+         request(`/todos/${e.target.dataset.id}/delete`, 'DELETE')
+          .then(() => {
+            location.reload();
+          })
+          .catch(err => {
+            console.log(err);
+          });
+       })
+     })
     </script>
   </body>
 </html>
