@@ -17,7 +17,7 @@ class Todo(db.Model):
     description = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
     todo_list_id = db.Column(db.Integer, db.ForeignKey(
-        'todolists.id'), nullable=False, default=1)
+        'todolists.id', onupdate='CASCADE', ondelete='CASCADE'), nullable=False, default=1)
 
     def __repr__(self):
         return f'<Todos {self.id, self.description}>'
@@ -26,8 +26,9 @@ class Todo(db.Model):
 class TodoList(db.Model):
     __tablename__ = 'todolists'
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(), nullable=True)
-    todos = db.relationship('Todo', backref='list', lazy=True)
+    name = db.Column(db.String(), nullable=False)
+    todos = db.relationship('Todo', backref='list',
+                            lazy=True, cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<TodoList {self.name, self.todos}>'
@@ -43,18 +44,19 @@ def get_todos(list_id):
     return render_template('index.html',
                            list=Todo.query.filter_by(
                                todo_list_id=list_id).order_by('id').all(),
-                           lists=TodoList.query.order_by('id').all()
+                           lists=TodoList.query.order_by('id').all(),
+                           listId=list_id
                            )
 
-
-@app.route('/lists/<list_id>/create', methods=['POST'])
-def create_todo(list_id):
+# Create todo
+@app.route('/todos/create', methods=['POST'])
+def create_todo():
     error = False
     body = {}
     todo_desc = request.get_json()['description']
 
     try:
-        new_todo = Todo(description=todo_desc, todo_list_id=list_id)
+        new_todo = Todo(description=todo_desc)
         db.session.add(new_todo)
         db.session.commit()
         body = {
@@ -101,6 +103,24 @@ def delete_todo(todo_id):
         # db.session.delete(todo)
         todo = Todo.query.filter_by(id=todo_id).delete()
         print(todo)
+        db.session.commit()
+
+    except:
+        print(exc_info())
+        db.session.rollback()
+
+    finally:
+        db.session.close()
+
+    return jsonify({'success': True})
+
+# Delete Lists
+@app.route('/lists/<list_id>/delete', methods=['DELETE'])
+def delete_list(list_id):
+    try:
+        todo_list = TodoList.query.get(list_id)
+        db.session.delete(todo_list)
+        print(todo_list)
         db.session.commit()
 
     except:

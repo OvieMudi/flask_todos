@@ -63,7 +63,7 @@
       {% for list in lists %}
         <li class="li-item">
           <a href="/lists/{{ list.id }}">{{list.name}}</a>
-          <a class="delete">&cross;</a>
+          <span  class="delete js-delete-list" data-id="{{ list.id }}">&cross;</span>
         </li>
       {% endfor %}
     </ul>
@@ -100,7 +100,7 @@
           />
           <label for="check">{{ todo.description }}</label>
         </div>
-        <span class="delete" data-id="{{ todo.id }}">&cross;</span>
+        <span class="delete js-delete-todo" data-id="{{ todo.id }}">&cross;</span>
       </li>
       {% endfor %}
     </ul>
@@ -133,7 +133,6 @@
         })
           .then(res => res.json())
           .then(response => {
-            console.log(response);
             location.reload();
           })
           .catch(err => {
@@ -160,9 +159,8 @@
       });
 
      // Delete todo
-     document.querySelectorAll('.delete').forEach(item => {
+     document.querySelectorAll('.js-delete-todo').forEach(item => {
        item.addEventListener('click', e => {
-         console.log(e.target)
          request(`/todos/${e.target.dataset.id}/delete`, 'DELETE')
           .then(() => {
             location.reload();
@@ -170,6 +168,21 @@
           .catch(err => {
             console.log(err);
           });
+       })
+     })
+
+     // Delete list
+     document.querySelectorAll('.js-delete-list').forEach(list => {
+       list.addEventListener('click', e => {
+         const {id: list_id} = e.target.dataset;
+       
+       request(`/lists/${list_id}/delete`, 'DELETE')
+       .then(res => res.json())
+       .then(res => {
+       })
+       .catch(err => {
+         console.log(err.message)
+        })
        })
      })
     </script>
