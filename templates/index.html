@@ -17,13 +17,30 @@
         overflow: hidden;
       }
 
+      .main {
+        display: flex;
+      }
+
       ul {
         list-style: none;
         padding: 0;
+      }
+
+      a, a:visited, a:link {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .todo-lists {
+        width: 200px;
+        margin-right: 2rem;
+      }
+
+      .todos {
         width: 360px;
       }
 
-      .todo-item {
+      .li-item {
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -41,6 +58,16 @@
 
   <!-- body -->
   <body>
+    <main class="main">
+    <ul class="todo-lists">
+      {% for list in lists %}
+        <li class="li-item">
+          <a href="/lists/{{ list.id }}">{{list.name}}</a>
+          <a class="delete">&cross;</a>
+        </li>
+      {% endfor %}
+    </ul>
+    <div>
     <form action="/todos/create" method="POST">
       <label class="invisible" for="description">Description</label>
       <input
@@ -52,9 +79,9 @@
       />
       <button>Add Todo</button>
     </form>
-    <ul>
-      {% for todo in data %}
-      <li class="todo-item">
+    <ul  class="todos">
+      {% for todo in list %}
+      <li class="li-item">
         <div>
           <input
             type="checkbox"
@@ -77,6 +104,8 @@
       </li>
       {% endfor %}
     </ul>
+    </div>
+    </main>
 
     <!-- scripts -->
     <script>

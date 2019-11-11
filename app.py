@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, abort, redirect
+from flask import Flask, render_template, request, jsonify, abort, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sys import exc_info
@@ -16,42 +16,45 @@ class Todo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     description = db.Column(db.String(), nullable=False)
     completed = db.Column(db.Boolean, nullable=False, default=False)
+    todo_list_id = db.Column(db.Integer, db.ForeignKey(
+        'todolists.id'), nullable=False, default=1)
 
     def __repr__(self):
         return f'<Todos {self.id, self.description}>'
 
 
-# todo1 = Todo( description='Make foo')
-# todo2 = Todo( description='Make bar')
-# todo3 = Todo( description='Make fooz')
-# todo4 = Todo( description='Make barz')
+class TodoList(db.Model):
+    __tablename__ = 'todolists'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(), nullable=True)
+    todos = db.relationship('Todo', backref='list', lazy=True)
 
-
-# db.create_all()
-
-# db.session.add_all([todo1, todo2, todo3, todo4])
-
-# db.session.commit()
+    def __repr__(self):
+        return f'<TodoList {self.name, self.todos}>'
 
 
 @app.route('/')
 def index():
-    return redirect('/todos')
+    return redirect(url_for('get_todos', list_id=1))
 
 
-@app.route('/todos')
-def todos():
-    return render_template('index.html', data=Todo.query.order_by('id').all())
+@app.route('/lists/<list_id>')
+def get_todos(list_id):
+    return render_template('index.html',
+                           list=Todo.query.filter_by(
+                               todo_list_id=list_id).order_by('id').all(),
+                           lists=TodoList.query.order_by('id').all()
+                           )
 
 
-@app.route('/todos/create', methods=['POST'])
-def create_todo():
+@app.route('/lists/<list_id>/create', methods=['POST'])
+def create_todo(list_id):
     error = False
     body = {}
     todo_desc = request.get_json()['description']
 
     try:
-        new_todo = Todo(description=todo_desc)
+        new_todo = Todo(description=todo_desc, todo_list_id=list_id)
         db.session.add(new_todo)
         db.session.commit()
         body = {
