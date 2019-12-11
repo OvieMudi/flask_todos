@@ -2,6 +2,12 @@ from flask import Flask, render_template, request, jsonify, abort, redirect, url
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from sys import exc_info
+from environs import Env
+
+env = Env()
+env.read_env()
+
+print(env.str('DEV_SQLALCHEMY_DATABASE_URI'))
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://skywalker:password@localhost:5432/flask_todoapp'
