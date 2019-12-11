@@ -10,7 +10,7 @@ env.read_env()
 print(env.str('DEV_SQLALCHEMY_DATABASE_URI'))
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgres://skywalker:password@localhost:5432/flask_todoapp'
+app.config['SQLALCHEMY_DATABASE_URI'] = env.str('SQLALCHEMY_DATABASE_URI')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
